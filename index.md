@@ -1,7 +1,25 @@
-# The art of data science
+# The Art of Data Science
+
+## Analyzing
+
+### Clustering
+
+### Fractal Dimension Estimation
+
+#### Correlation Sum Approaches
+
+#### Box Counting Approaches
+
+### Dimensionality Reduction
+
+## Machine Learning
+
+### Deep Learning
+
+## Forecasting 
+
+### Time Series Prediction
 
 # About me
 
-# Research Interests
-
-# Previous Projects
+# Selected Previous Projects
