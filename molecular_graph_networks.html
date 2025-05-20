@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis: Merkwirth & Lengauer (2005) - Early GNN Pioneers?</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Visualization & Content Choices:
+    - Report Section I (Intro) -> SPA Section: Hero/Intro -> Goal: Inform -> Presentation: Concise introductory text. -> Interaction: None. -> Justification: Sets the stage for the SPA's content.
+    - Report Section II (2005 Paper Overview) -> SPA Section: 'A Snapshot' -> Goal: Inform -> Presentation: Key information (publication, objective, methodology, application) in distinct, readable blocks/cards. -> Interaction: Minimal, focus on clarity. -> Justification: Summarizes the core subject of the report.
+    - Report Section III (Chronological Context) -> SPA Section: 'Placing it in Time' -> Goal: Show Change/Organize/Compare -> Presentation:
+        - Interactive Timeline (HTML/CSS/JS): Key papers (Sperduti & Starita 1997, M&L 2005, Gori et al. 2005, Scarselli et al. 2009) as clickable events showing details.
+        - Styled HTML Table: For the 'Chronology of Early GNN Concepts' table.
+        -> Interaction: Click events on timeline items. -> Justification: Timeline offers an engaging way to explore chronological data; table provides detailed comparison.
+    - Report Section IV (Technical Dissection) -> SPA Section: 'Under the Hood' -> Goal: Explain/Organize/Compare -> Presentation:
+        - Interactive Cards (HTML/Tailwind/JS): For each GNN primitive (Message Passing, Global Readout, SGD, Activation). Clicking expands to show details from the report.
+        - Styled HTML Table: For the 'Technical Component Analysis' table.
+        -> Interaction: Click to expand cards. -> Justification: Breaks down complex technical analysis into manageable, interactive pieces. Table provides detailed comparison.
+    - Report Section V (Historical Significance) -> SPA Section: 'Lasting Impact' -> Goal: Inform/Summarize -> Presentation: Key insights presented in clear text blocks. -> Interaction: None. -> Justification: Highlights the paper's influence.
+    - Report Section VI (Conclusion) -> SPA Section: 'The Verdict' -> Goal: Summarize/Conclude -> Presentation: Bullet points for assessment and the final definitive statement. -> Interaction: None. -> Justification: Provides a clear takeaway.
+    - Chart.js/Plotly.js: Considered but not implemented. The source report's content is primarily textual and analytical. The chronological data is better represented by a custom HTML/JS timeline for this context, and tables are used for direct data comparisons. This avoids forcing data into chart types where it doesn't naturally fit and adheres to the 'NO SVG' constraint effectively.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .active-nav {
+            color: #0369a1; /* sky-700 */
+            font-weight: 600;
+            border-bottom: 2px solid #0ea5e9; /* sky-500 */
+        }
+        .nav-item {
+            transition: all 0.3s ease;
+        }
+        .timeline-item-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .timeline-item-content.expanded {
+            max-height: 1000px; /* Adjust as needed */
+        }
+        .card-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .card-content.expanded {
+            max-height: 1000px; /* Adjust as needed */
+        }
+        .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        th, td {
+            padding: 0.75rem;
+            vertical-align: top;
+            border-top: 1px solid #e5e7eb; /* gray-200 */
+        }
+        thead th {
+            vertical-align: bottom;
+            border-bottom: 2px solid #d1d5db; /* gray-300 */
+            background-color: #f9fafb; /* gray-50 */
+        }
+        h1, h2, h3 {
+            scroll-margin-top: 80px; /* Offset for sticky header */
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <header class="bg-white shadow-md sticky top-0 z-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <h1 class="text-xl sm:text-2xl font-bold text-sky-700">Merkwirth & Lengauer (2005): A GNN Retrospective</h1>
+                <nav class="hidden md:flex space-x-4 lg:space-x-6">
+                    <a href="#snapshot" class="nav-item text-slate-600 hover:text-sky-600 px-3 py-2 rounded-md text-sm font-medium">Snapshot</a>
+                    <a href="#timeline" class="nav-item text-slate-600 hover:text-sky-600 px-3 py-2 rounded-md text-sm font-medium">Timeline</a>
+                    <a href="#technical" class="nav-item text-slate-600 hover:text-sky-600 px-3 py-2 rounded-md text-sm font-medium">Technical Deep Dive</a>
+                    <a href="#impact" class="nav-item text-slate-600 hover:text-sky-600 px-3 py-2 rounded-md text-sm font-medium">Impact</a>
+                    <a href="#verdict" class="nav-item text-slate-600 hover:text-sky-600 px-3 py-2 rounded-md text-sm font-medium">Verdict</a>
+                </nav>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-slate-600 hover:text-sky-600 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden bg-white shadow-lg">
+            <a href="#snapshot" class="block text-slate-600 hover:text-sky-600 hover:bg-slate-100 px-4 py-3 text-base font-medium">Snapshot</a>
+            <a href="#timeline" class="block text-slate-600 hover:text-sky-600 hover:bg-slate-100 px-4 py-3 text-base font-medium">Timeline</a>
+            <a href="#technical" class="block text-slate-600 hover:text-sky-600 hover:bg-slate-100 px-4 py-3 text-base font-medium">Technical Deep Dive</a>
+            <a href="#impact" class="block text-slate-600 hover:text-sky-600 hover:bg-slate-100 px-4 py-3 text-base font-medium">Impact</a>
+            <a href="#verdict" class="block text-slate-600 hover:text-sky-600 hover:bg-slate-100 px-4 py-3 text-base font-medium">Verdict</a>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <section id="intro" class="mb-12 pt-8">
+            <p class="text-lg leading-relaxed mb-4">
+                This interactive application explores the 2005 paper "Automatic Generation of Complementary Descriptors with Molecular Graph Networks" by Christian Merkwirth and Thomas Lengauer. We delve into its status as one of the earliest Graph Neural Network (GNN) papers, its pioneering techniques in chemoinformatics, and its alignment with modern GNN concepts.
+            </p>
+            <p class="text-md leading-relaxed text-slate-600">
+                The field of GNNs is rapidly evolving, and understanding its origins is key. This exploration aims to critically analyze the claims surrounding the Merkwirth and Lengauer (2005) paper, drawing from the detailed research report provided.
+            </p>
+        </section>
+
+        <section id="snapshot" class="mb-16 pt-8">
+            <h2 class="text-3xl font-bold text-sky-700 mb-6">The 2005 Merkwirth & Lengauer Paper: A Snapshot</h2>
+            <p class="text-md leading-relaxed text-slate-600 mb-6">
+                This section provides an overview of the Merkwirth and Lengauer (2005) paper, detailing its publication, core objectives, the innovative "Molecular Graph Networks" (MGNs) methodology, and its application in chemoinformatics. The paper aimed to automatically generate diverse molecular descriptors directly from molecular graphs.
+            </p>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg border border-sky-100">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">Publication & Objective</h3>
+                    <p class="mb-2"><strong class="text-slate-700">Title:</strong> "Automatic Generation of Complementary Descriptors with Molecular Graph Networks"</p>
+                    <p class="mb-2"><strong class="text-slate-700">Authors:</strong> Christian Merkwirth, Thomas Lengauer</p>
+                    <p class="mb-2"><strong class="text-slate-700">Journal:</strong> Journal of Chemical Information and Modeling (2005)</p>
+                    <p><strong class="text-slate-700">Core Objective:</strong> To introduce a method for automatically generating weakly correlated descriptors for molecular datasets by turning the molecular graph into an adaptive whole molecule composite descriptor.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg border border-sky-100">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">Methodology: Molecular Graph Networks (MGNs)</h3>
+                    <p class="mb-2">MGNs translate molecular graph structure into a dynamical system. Each atom (node) state evolves iteratively based on a nonlinear function of weighted sums of adjacent node states. Weights are shared based on atom/bond types and learned from data.</p>
+                    <p>This "discrete-time spatio-temporal dynamical system" is a key articulation of iterative refinement on graph data.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg border border-sky-100 md:col-span-2">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">Application in Chemoinformatics</h3>
+                    <p>MGNs generated adaptive descriptors sensitive to molecular topology. Applied to classify compounds in the NCI DTP AIDS antiviral screen, performance was comparable to established methods, demonstrating automated learning of meaningful features from graph structures.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="timeline" class="mb-16 pt-8">
+            <h2 class="text-3xl font-bold text-sky-700 mb-6">Placing it in Time: Early GNN Development</h2>
+            <p class="text-md leading-relaxed text-slate-600 mb-6">
+                Understanding the significance of Merkwirth & Lengauer (2005) requires placing it in the timeline of early GNN research. This section presents an interactive timeline of key early papers and a comparative table. The year 2005 was pivotal, with multiple works emerging that tackled learning on graph structures.
+            </p>
+            
+            <div class="relative mt-8 mb-12">
+                <div class="border-l-4 border-sky-500 absolute h-full top-0 left-1/2 transform -translate-x-1/2 md:left-4 md:transform-none"></div>
+                <div id="timeline-items-container" class="space-y-12">
+                    </div>
+            </div>
+
+            <h3 class="text-2xl font-semibold text-sky-600 mt-12 mb-4">Chronology of Early Graph Neural Network Concepts</h3>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg border border-sky-100 table-responsive">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                        <tr>
+                            <th scope="col" class="px-4 py-3">Year</th>
+                            <th scope="col" class="px-4 py-3">Paper (Authors, Title, Venue)</th>
+                            <th scope="col" class="px-4 py-3">Key Contribution</th>
+                            <th scope="col" class="px-4 py-3">Graph Types</th>
+                            <th scope="col" class="px-4 py-3">Terminology</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="px-4 py-3 font-medium">1997</td>
+                            <td class="px-4 py-3">Sperduti & Starita, "Supervised neural networks for the classification of structures" (IEEE TNN)</td>
+                            <td class="px-4 py-3">Neural networks for DAGs, recursive processing.</td>
+                            <td class="px-4 py-3">Directed Acyclic Graphs (DAGs)</td>
+                            <td class="px-4 py-3">"Recursive Neural Networks for Structures"</td>
+                        </tr>
+                        <tr class="border-b bg-sky-50">
+                            <td class="px-4 py-3 font-medium">2005</td>
+                            <td class="px-4 py-3">Merkwirth & Lengauer, "Automatic Generation of Complementary Descriptors with Molecular Graph Networks" (J. Chem. Inf. Model.)</td>
+                            <td class="px-4 py-3">Iterative node state updates on molecular graphs, shared weights, chemoinformatics app.</td>
+                            <td class="px-4 py-3">Undirected, labeled molecular graphs</td>
+                            <td class="px-4 py-3">"Molecular Graph Networks" (MGNs)</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="px-4 py-3 font-medium">2005</td>
+                            <td class="px-4 py-3">Gori, Monfardini & Scarselli, "A new model for learning in graph domains" (IJCNN)</td>
+                            <td class="px-4 py-3">Iterative node state updates for general graphs via contraction mapping.</td>
+                            <td class="px-4 py-3">General graphs (cyclic, directed, undirected)</td>
+                            <td class="px-4 py-3">"Graph Neural Network" (GNN)</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="px-4 py-3 font-medium">2009</td>
+                            <td class="px-4 py-3">Scarselli et al., "The Graph Neural Network Model" (IEEE TNNLS)</td>
+                            <td class="px-4 py-3">Comprehensive GNN formalization, fixed-point convergence.</td>
+                            <td class="px-4 py-3">General graphs</td>
+                            <td class="px-4 py-3">"Graph Neural Network" (GNN)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="technical" class="mb-16 pt-8">
+            <h2 class="text-3xl font-bold text-sky-700 mb-6">Under the Hood: Technical Alignment with GNNs</h2>
+            <p class="text-md leading-relaxed text-slate-600 mb-6">
+                This section dissects the technical components of Merkwirth & Lengauer's (2005) Molecular Graph Networks (MGNs) and aligns them with modern GNN primitives. Explore the interactive cards below to see how their work on message passing, global readout, optimization, and activation functions foreshadowed current techniques.
+            </p>
+            <div id="technical-cards-container" class="grid md:grid-cols-2 gap-6 mb-12">
+                </div>
+
+            <h3 class="text-2xl font-semibold text-sky-600 mt-12 mb-4">Technical Component Analysis Summary</h3>
+            <div class="bg-white p-4 sm:p-6 rounded-lg shadow-lg border border-sky-100 table-responsive">
+                <table class="w-full text-sm text-left">
+                    <thead class="text-xs text-slate-700 uppercase bg-slate-100">
+                        <tr>
+                            <th scope="col" class="px-4 py-3">GNN Primitive</th>
+                            <th scope="col" class="px-4 py-3">Merkwirth & Lengauer (2005) Implementation</th>
+                            <th scope="col" class="px-4 py-3">Modern GNN Analogue</th>
+                            <th scope="col" class="px-4 py-3">Alignment Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="px-4 py-3 font-medium">Message Passing</td>
+                            <td class="px-4 py-3">Iterative node state updates $y_i(t+1) = \sigma(\sum A \cdot y_j(t) + c)$ based on weighted sum of neighbors' states.</td>
+                            <td class="px-4 py-3">MPNN framework.</td>
+                            <td class="px-4 py-3">Direct functional equivalent.</td>
+                        </tr>
+                        <tr class="border-b bg-sky-50">
+                            <td class="px-4 py-3 font-medium">Global Readout</td>
+                            <td class="px-4 py-3">Weighted average of final node states $z = (1/N) \sum b_{e_i} \cdot y_i(T)$ for graph-level descriptor.</td>
+                            <td class="px-4 py-3">Global Average Pooling (weighted).</td>
+                            <td class="px-4 py-3">Direct functional equivalent.</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="px-4 py-3 font-medium">Optimization</td>
+                            <td class="px-4 py-3">Stochastic Gradient Descent (SGD) with minibatches, decaying learning rate.</td>
+                            <td class="px-4 py-3">SGD with minibatches.</td>
+                            <td class="px-4 py-3">Identical standard technique.</td>
+                        </tr>
+                        <tr class="border-b bg-sky-50">
+                            <td class="px-4 py-3 font-medium">Activation Function</td>
+                            <td class="px-4 py-3">Modified sigmoid, slope decreases to 0.05 for $|x| \ge 1$ (not fully saturating).</td>
+                            <td class="px-4 py-3">Functionally similar to ReLU/Leaky ReLU (mitigates vanishing gradients).</td>
+                            <td class="px-4 py-3">Shares goal of preventing vanishing gradients.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+             <p class="text-md leading-relaxed text-slate-600 mt-6">
+                This technical dissection reveals that Merkwirth and Lengauer (2005) not only conceptualized a graph neural network architecture but also implemented several key components that are now standard in the field. Their approach of learning descriptors directly from the molecular graph structure using gradient-based optimization, rather than relying on pre-defined, fixed descriptors common in earlier chemoinformatics, is a hallmark of modern deep learning and GNNs.
+            </p>
+        </section>
+
+        <section id="impact" class="mb-16 pt-8">
+            <h2 class="text-3xl font-bold text-sky-700 mb-6">Lasting Impact: Significance in Science</h2>
+            <p class="text-md leading-relaxed text-slate-600 mb-6">
+                The 2005 paper by Merkwirth and Lengauer holds considerable historical significance, influencing chemoinformatics and the broader development of graph representation learning. This section explores its pioneering role and lasting implications.
+            </p>
+            <div class="space-y-6">
+                <div class="bg-white p-6 rounded-lg shadow-lg border border-sky-100">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">Pioneering GNNs in Chemoinformatics</h3>
+                    <p>One of the earliest to apply a neural network architecture that directly processes molecular graphs via iterative, neighborhood-aggregating updates to learn task-specific representations. This marked a departure from using pre-computed fingerprints or descriptors, offering a new paradigm for molecular feature engineering.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg border border-sky-100">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">Influence on Subsequent GNN Literature</h3>
+                    <p>Acknowledged in later GNN literature (e.g., McGill GRL Book, Kearnes et al. 2016, recent MPNN surveys) as proposing an "original GNN model" and foundational to MPNNs. This "long tail of recognition" underscores its seminal contribution.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg border border-sky-100">
+                    <h3 class="text-xl font-semibold text-sky-600 mb-2">Broader Implications for Graph Representation Learning</h3>
+                    <p>Demonstrated the feasibility of learning meaningful representations from graph data via iterative, localized computations. This principle underpins much of modern GNN research, and their success in a challenging domain like chemoinformatics provided a valuable proof-of-concept.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="verdict" class="mb-12 pt-8">
+            <h2 class="text-3xl font-bold text-sky-700 mb-6">The Verdict: A Pioneering Contribution</h2>
+            <p class="text-md leading-relaxed text-slate-600 mb-6">
+                Based on a detailed examination, the Merkwirth and Lengauer (2005) paper stands as a significant and pioneering contribution to the early development of Graph Neural Networks. This section summarizes the assessment of claims and provides a definitive statement.
+            </p>
+            <div class="bg-white p-6 rounded-lg shadow-lg border border-sky-100 mb-6">
+                <h3 class="text-xl font-semibold text-sky-600 mb-3">Synthesized Assessment of Claims:</h3>
+                <ul class="list-disc list-inside space-y-2 text-slate-700">
+                    <li><strong>One of the earliest GNN papers?</strong> Yes. Contemporaneous with Gori et al. (2005) and predates Scarselli et al. (2009 formalization).</li>
+                    <li><strong>Pioneering GNNs in chemoinformatics?</strong> Emphatically, yes. One of the first to learn adaptive descriptors directly from molecular graphs.</li>
+                    <li><strong>Message passing?</strong> Yes. Clear implementation of iterative updates based on neighbor aggregation.</li>
+                    <li><strong>Global average pooling?</strong> Yes. Used weighted average of final atom states for a graph-level descriptor.</li>
+                    <li><strong>Stochastic Gradient Descent (SGD)?</strong> Yes. Explicitly used SGD with minibatches.</li>
+                    <li><strong>Parallels to ReLU?</strong> Yes. Modified sigmoid aimed to prevent vanishing gradients, sharing functional objective with ReLU.</li>
+                </ul>
+            </div>
+            <div class="bg-sky-50 p-6 rounded-lg shadow-inner">
+                <h3 class="text-xl font-semibold text-sky-700 mb-3">Definitive Statement</h3>
+                <p class="leading-relaxed">
+                    The 2005 paper by Christian Merkwirth and Thomas Lengauer, "Automatic Generation of Complementary Descriptors with Molecular Graph Networks," is a significant and pioneering contribution to early GNN development. It introduced a sophisticated architecture for processing molecular graphs, incorporating mechanisms now recognized as core GNN primitives: message passing, global pooling, SGD optimization, and an innovative activation function. Its groundbreaking application in chemoinformatics and subsequent recognition affirm its important place in GNN history.
+                </p>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-slate-800 text-slate-300 py-8 text-center">
+        <p class="text-sm">Interactive SPA based on the report "An Examination of Merkwirth and Lengauer (2005) as a Foundational Contribution to Graph Neural Networks".</p>
+        <p class="text-xs mt-1">Designed for educational and illustrative purposes.</p>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (mobileMenuButton && mobileMenu) {
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            // Close mobile menu when a link is clicked
+            mobileMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+        }
+
+        // Smooth scrolling and active nav state
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('href');
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+        
+        const sections = document.querySelectorAll('main section[id]');
+        const navLinks = document.querySelectorAll('nav a');
+        const mobileNavLinks = document.querySelectorAll('#mobile-menu a');
+
+        function changeNav() {
+            let index = sections.length;
+            while(--index && window.scrollY + 100 < sections[index].offsetTop) {}
+            
+            navLinks.forEach((link) => link.classList.remove('active-nav'));
+            mobileNavLinks.forEach((link) => link.classList.remove('active-nav'));
+
+            if (index >= 0 && navLinks[index]) {
+                 navLinks[index].classList.add('active-nav');
+            }
+            if (index >=0 && mobileNavLinks[index]) {
+                 mobileNavLinks[index].classList.add('active-nav');
+            }
+        }
+        changeNav(); // Initial call
+        window.addEventListener('scroll', changeNav);
+
+
+        // Timeline Data
+        const timelineData = [
+            {
+                year: "1997",
+                title: "Sperduti & Starita",
+                paper: "\"Supervised neural networks for the classification of structures\" (IEEE TNN)",
+                contribution: "Pioneering work applying neural networks to Directed Acyclic Graphs (DAGs), introducing recursive processing of node information. Motivated early GNN studies.",
+                side: "left"
+            },
+            {
+                year: "2005 (Dec 2004 received)",
+                title: "Merkwirth & Lengauer",
+                paper: "\"Automatic Generation of Complementary Descriptors with Molecular Graph Networks\" (J. Chem. Inf. Model.)",
+                contribution: "Introduced 'Molecular Graph Networks' for chemoinformatics. Featured iterative node state updates, shared weights based on atom/bond types, and direct application to molecular graphs. Contemporaneous with initial general GNN proposals.",
+                side: "right",
+                highlight: true
+            },
+            {
+                year: "2005 (July-Aug)",
+                title: "Gori, Monfardini & Scarselli",
+                paper: "\"A new model for learning in graph domains\" (IJCNN)",
+                contribution: "Presented a 'Graph Neural Network (GNN)' model for general graph types (cyclic, directed, undirected). Based on iterative node state updates to a fixed point (contraction mapping).",
+                side: "left"
+            },
+            {
+                year: "2009",
+                title: "Scarselli et al.",
+                paper: "\"The Graph Neural Network Model\" (IEEE TNNLS)",
+                contribution: "Provided a comprehensive formalization of GNNs, building on Gori et al. (2005). Detailed fixed-point convergence (Banach's theorem) and learning algorithms. A landmark GNN paper.",
+                side: "right"
+            }
+        ];
+
+        const timelineContainer = document.getElementById('timeline-items-container');
+        if (timelineContainer) {
+            timelineData.forEach((item, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.classList.add('timeline-item', 'mb-8', 'flex', 'items-center', 'w-full');
+                
+                let contentOrder = (item.side === 'left' && window.innerWidth >= 768) ? 'order-1 md:order-2' : 'order-1';
+                let dotOrder = (item.side === 'left' && window.innerWidth >= 768) ? 'order-2 md:order-1' : 'order-2';
+                let textAlign = (item.side === 'left' && window.innerWidth >= 768) ? 'md:text-right' : 'md:text-left';
+                let marginClass = (item.side === 'left' && window.innerWidth >= 768) ? 'md:mr-10' : 'md:ml-10';
+
+
+                itemDiv.innerHTML = `
+                    <div class="w-full md:w-5/12 px-4 py-4 bg-white rounded-lg shadow-xl ${contentOrder} ${textAlign} ${item.highlight ? 'border-2 border-sky-500' : 'border border-slate-200'}">
+                        <button class="w-full text-left focus:outline-none">
+                            <div class="flex justify-between items-center">
+                                <h4 class="text-lg font-semibold ${item.highlight ? 'text-sky-700' : 'text-slate-700'}">${item.year} - ${item.title}</h4>
+                                <span class="text-sky-600 text-xl expand-icon">+</span>
+                            </div>
+                        </button>
+                        <div class="timeline-item-content mt-2">
+                            <p class="text-sm text-slate-600 mb-1"><em>${item.paper}</em></p>
+                            <p class="text-sm text-slate-600">${item.contribution}</p>
+                        </div>
+                    </div>
+                    <div class="z-10 flex items-center justify-center w-8 h-8 bg-sky-500 rounded-full text-white font-bold text-sm ${dotOrder} md:mx-4 shrink-0">${index + 1}</div>
+                    <div class="hidden md:block w-5/12 px-1"></div>
+                `;
+                if (item.side === 'left' && window.innerWidth >= 768) {
+                     itemDiv.innerHTML = `
+                        <div class="hidden md:block w-5/12 px-1"></div>
+                        <div class="z-10 flex items-center justify-center w-8 h-8 bg-sky-500 rounded-full text-white font-bold text-sm ${dotOrder} md:mx-4 shrink-0">${index + 1}</div>
+                        <div class="w-full md:w-5/12 px-4 py-4 bg-white rounded-lg shadow-xl ${contentOrder} ${textAlign} ${item.highlight ? 'border-2 border-sky-500' : 'border border-slate-200'}">
+                            <button class="w-full text-left focus:outline-none">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="text-lg font-semibold ${item.highlight ? 'text-sky-700' : 'text-slate-700'}">${item.year} - ${item.title}</h4>
+                                    <span class="text-sky-600 text-xl expand-icon">+</span>
+                                </div>
+                            </button>
+                            <div class="timeline-item-content mt-2">
+                                <p class="text-sm text-slate-600 mb-1"><em>${item.paper}</em></p>
+                                <p class="text-sm text-slate-600">${item.contribution}</p>
+                            </div>
+                        </div>
+                    `;
+                }
+
+
+                timelineContainer.appendChild(itemDiv);
+
+                const button = itemDiv.querySelector('button');
+                const content = itemDiv.querySelector('.timeline-item-content');
+                const icon = itemDiv.querySelector('.expand-icon');
+                button.addEventListener('click', () => {
+                    content.classList.toggle('expanded');
+                    icon.textContent = content.classList.contains('expanded') ? '-' : '+';
+                });
+            });
+        }
+
+
+        // Technical Cards Data
+        const technicalCardsData = [
+            {
+                title: "Message Passing Mechanism",
+                short: "Iterative node state updates based on neighbor aggregation.",
+                details: "The core of MGNs involves nodes (atoms) updating their states ($y_i(t+1) = \\sigma(x_i(t+1))$) iteratively. The pre-activation $x_i(t+1)$ is a sum of contributions from neighbors $j$: $x_i(t+1) = \\sum_{j \\text{ adj } i} A_{e_i, B_{ij}}(t) \\cdot y_j(t) + c_{e_i}(t)$. This is a direct implementation of message passing: messages ($y_j(t)$) are transformed (weights $A$), aggregated (summed), and used to update node states. This aligns with the general MPNN framework."
+            },
+            {
+                title: "Global Readout Strategy",
+                short: "Weighted average of final node states for a graph-level descriptor.",
+                details: "After $T$ iterations, a single 'whole molecule composite descriptor' ($z$) is generated from final node states $y_i(T)$ by a weighted average: $z = (1/N) \\sum_{i=1}^{N} b_{e_i} \\cdot y_i(T)$. This is functionally a weighted global average pooling, aggregating node embeddings into a graph-level representation, similar to modern GNN readout functions."
+            },
+            {
+                title: "Optimization Approach (SGD)",
+                short: "Trained with Stochastic Gradient Descent and backpropagation.",
+                details: "MGNs were trained by 'gradient descent techniques, which rely on the efficient calculation of the gradient by back-propagation,' specifically Stochastic Gradient Descent (SGD) or 'online learning.' They used minibatches and a decaying learning rate. This is standard practice for training neural networks, including GNNs."
+            },
+            {
+                title: "Activation Function (Parallels to ReLU)",
+                short: "Modified sigmoid to prevent vanishing gradients.",
+                details: "A modified sigmoidal function $\\sigma(x)$ was used. For $|x| \\ge 1$, its slope decreases to 0.05 instead of fully saturating. This was to 'prevent the gradient descent algorithm from getting stuck' and maintain gradient flow, sharing the functional objective of ReLU ($f(x) = \\max(0, x)$) in mitigating vanishing gradients. This piecewise characteristic and non-saturation for large inputs are key parallels."
+            }
+        ];
+
+        const technicalCardsContainer = document.getElementById('technical-cards-container');
+        if (technicalCardsContainer) {
+            technicalCardsData.forEach(card => {
+                const cardDiv = document.createElement('div');
+                cardDiv.classList.add('bg-white', 'p-6', 'rounded-lg', 'shadow-lg', 'border', 'border-sky-100', 'hover:shadow-xl', 'transition-shadow');
+                cardDiv.innerHTML = `
+                    <button class="w-full text-left focus:outline-none">
+                        <div class="flex justify-between items-center">
+                            <h3 class="text-xl font-semibold text-sky-600 mb-2">${card.title}</h3>
+                            <span class="text-sky-600 text-2xl expand-icon-card">+</span>
+                        </div>
+                        <p class="text-slate-600 text-sm mb-3">${card.short}</p>
+                    </button>
+                    <div class="card-content text-sm text-slate-700 leading-relaxed">
+                        <p>${card.details.replace(/\$(.*?)\$/g, '<span class=\"italic text-sky-700\">$1</span>').replace(/\\sum/g, '&sum;').replace(/\\sigma/g, '&sigma;')}</p>
+                    </div>
+                `;
+                technicalCardsContainer.appendChild(cardDiv);
+
+                const button = cardDiv.querySelector('button');
+                const content = cardDiv.querySelector('.card-content');
+                const icon = cardDiv.querySelector('.expand-icon-card');
+                button.addEventListener('click', () => {
+                    content.classList.toggle('expanded');
+                    icon.textContent = content.classList.contains('expanded') ? '-' : '+';
+                });
+            });
+        }
+    </script>
+
+</body>
+</html>
