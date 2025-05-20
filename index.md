@@ -103,7 +103,7 @@ Demonstrated the feasibility of learning meaningful representations from graph d
 ---
 
 <a id="verdict"></a>
-## The Verdict: A Pioneering Contribution
+## A Pioneering Contribution
 
 Based on a detailed examination, the Merkwirth and Lengauer (2005) paper stands as a significant and pioneering contribution to the early development of Graph Neural Networks. This section summarizes the assessment of claims and provides a definitive statement.
 
@@ -120,6 +120,3 @@ The 2005 paper by Christian Merkwirth and Thomas Lengauer, "Automatic Generation
 
 ---
 
-**Footer**
-Interactive SPA based on the report "An Examination of Merkwirth and Lengauer (2005) as a Foundational Contribution to Graph Neural Networks".
-Designed for educational and illustrative purposes.
